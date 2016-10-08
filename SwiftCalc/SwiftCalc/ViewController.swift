@@ -21,8 +21,13 @@ class ViewController: UIViewController {
     
     // TODO: This looks like a good place to add some data structures.
     //       One data structure is initialized below for reference.
-    var someDataStructure: [String] = [""]
-    
+    var inputs: [String] = []
+    var resLabelString: String = "0"
+    var charLimitReached: Bool = false
+    var arg1: String = ""
+    var op: String = ""
+    var arg2: String = ""
+    var latestInput = ""
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,6 +41,7 @@ class ViewController: UIViewController {
         resultLabel.accessibilityValue = "resultLabel"
         makeButtons()
         // Do any additional setup here.
+        updateResultLabel("0")
     }
     
     override func didReceiveMemoryWarning() {
@@ -53,44 +59,154 @@ class ViewController: UIViewController {
     //       Modify this one or create your own.
     func updateResultLabel(_ content: String) {
         print("Update me like one of those PCs")
+        resultLabel.text = content
     }
     
     
-    // TODO: A calculate method with no parameters, scary!
-    //       Modify this one or create your own.
     func calculate() -> String {
-        return "0"
+        var resString: String = ""
+        
+        if (arg1.contains(".") || arg2.contains(".") || op == "/") {
+            let calculated: Double = doubleCalculate(a: Double(arg1)!, b: Double(arg2)!, operation: op)
+            let possibleInt: Int? = Int(calculated)
+            if (possibleInt != nil) {
+                resString = String(possibleInt!)
+            } else {
+                resString = String(calculated)
+            }
+        } else {
+            let calculated: Int = intCalculate(a: Int(arg1)!, b: Int(arg2)!, operation: op)
+            resString = String(calculated)
+        }
+//        inputs.append(resString)
+        return resString
     }
     
     // TODO: A simple calculate method for integers.
     //       Modify this one or create your own.
     func intCalculate(a: Int, b:Int, operation: String) -> Int {
+        //let operators = ["/", "*", "-", "+", "="]
         print("Calculation requested for \(a) \(operation) \(b)")
-        return 0
+        switch operation {
+            case "/": return a/b
+            case "*": return a*b
+            case "-": return a-b
+            case "+": return a+b
+        default: return 0
+        }
     }
     
     // TODO: A general calculate method for doubles
     //       Modify this one or create your own.
-    func calculate(a: String, b:String, operation: String) -> Double {
+    func doubleCalculate(a: Double, b:Double, operation: String) -> Double {
         print("Calculation requested for \(a) \(operation) \(b)")
-        return 0.0
+        switch operation {
+        case "/": return a/b
+        case "*": return a*b
+        case "-": return a-b
+        case "+": return a+b
+        default: return 0
+        }
     }
     
     // REQUIRED: The responder to a number button being pressed.
     func numberPressed(_ sender: CustomButton) {
-        guard Int(sender.content) != nil else { return }
         print("The number \(sender.content) was pressed")
-        // Fill me in!
+        latestInput = sender.content
+        //  || op.contains(latestInput)
+        if (!charLimitReached) {
+            if (resLabelString == "0") {
+                resLabelString = sender.content
+            } else {
+                resLabelString.append(sender.content)
+            }
+            updateResultLabel(resLabelString)
+        }
+        if (resLabelString.characters.count >= 7) {
+            charLimitReached = true
+        }
     }
     
     // REQUIRED: The responder to an operator button being pressed.
     func operatorPressed(_ sender: CustomButton) {
-        // Fill me in!
+        let ops = ["/", "*", "-", "+"]
+        print("The operator \(sender.content) was pressed")
+
+        switch sender.content {
+        case "C":
+            resLabelString = "0"
+            arg1 = ""
+            arg2 = ""
+            op = ""
+            latestInput = ""
+            updateResultLabel(resLabelString)
+        case "+/-":
+            resLabelString = flipSign(resLabelString)
+            updateResultLabel(resLabelString)
+        case "=":
+            arg2 = resLabelString
+            if (shouldCalculate()) {
+                resLabelString = calculate()
+                arg1 = resLabelString
+                op = ""
+                arg2 = ""
+                updateResultLabel(resLabelString)
+            }
+        default:
+            insertNumArg(resLabelString)
+            if (shouldCalculate() && ops.contains(latestInput)) { //if you're pressing ops consecutively.
+                op = sender.content //ignore previous op.
+                resLabelString = "0"
+
+            } else if (shouldCalculate()) {
+                resLabelString = calculate()
+                op = sender.content
+                arg1 = resLabelString
+                arg2 = ""
+                updateResultLabel(resLabelString)
+                resLabelString = "0"
+
+            } else {
+                op = sender.content
+                resLabelString = "0"
+            }
+        }
+        latestInput = sender.content
+    }
+    
+    func shouldCalculate() -> Bool {
+        return arg1 != "" && op != "" && arg2 != ""
+    }
+    
+    func insertNumArg(_ newarg: String) {
+        if (newarg == "") {
+            return
+        }
+        if (arg1 == "") {
+            arg1 = newarg
+        } else {
+            arg2 = newarg
+        }
+    }
+    
+    func flipSign(_ resultString: String) -> String {
+        var res = resultString
+        if (resultString[resultString.startIndex] == "-") {
+            res.remove(at: resultString.startIndex)
+        } else {
+            res.insert("-", at: resultString.startIndex)
+        }
+        return res
     }
     
     // REQUIRED: The responder to a number or operator button being pressed.
     func buttonPressed(_ sender: CustomButton) {
        // Fill me in!
+        latestInput = sender.content
+        if (!charLimitReached) {
+            resLabelString.append(sender.content)
+            updateResultLabel(resLabelString)
+        }
     }
     
     // IMPORTANT: Do NOT change any of the code below.
