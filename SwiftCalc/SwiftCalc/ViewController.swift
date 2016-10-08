@@ -59,7 +59,12 @@ class ViewController: UIViewController {
     //       Modify this one or create your own.
     func updateResultLabel(_ content: String) {
         print("Update me like one of those PCs")
-        resultLabel.text = content
+        if (content.characters.count > 7) {
+            let startIndex = content.index(content.startIndex, offsetBy: 7)
+            resultLabel.text = content.substring(to: startIndex)
+        } else {
+            resultLabel.text = content
+        }
     }
     
     
@@ -68,9 +73,10 @@ class ViewController: UIViewController {
         
         if (arg1.contains(".") || arg2.contains(".") || op == "/") {
             let calculated: Double = doubleCalculate(a: Double(arg1)!, b: Double(arg2)!, operation: op)
-            let possibleInt: Int? = Int(calculated)
-            if (possibleInt != nil) {
+            if (floor(calculated) == calculated) {
+                let possibleInt: Int? = Int(calculated)
                 resString = String(possibleInt!)
+
             } else {
                 resString = String(calculated)
             }
